@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Padeloq — Padel Club, Level Quiz, Shuffler & Americano</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .court-gradient {
+      background: linear-gradient(135deg, #065f46 0%, #047857 50%, #0f766e 100%);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <button onclick="app.navigate('dashboard')" class="flex items-center gap-2.5 text-left group">
+        <div class="w-10 h-10 rounded-xl court-gradient flex items-center justify-center text-white font-extrabold text-lg shadow-md group-hover:scale-105 transition">
+          🎾
+        </div>
+        <div>
+          <span class="font-extrabold text-lg tracking-tight text-slate-900 block leading-none">Padeloq</span>
+          <span class="text-[11px] font-medium text-emerald-600">Club &amp; Match Engine</span>
+        </div>
+      </button>
+
+      <!-- Desktop Navigation -->
+      <nav id="main-nav" class="hidden md:flex items-center gap-1.5">
+        <button data-nav="dashboard" onclick="app.navigate('dashboard')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          Dashboard
+        </button>
+        <button data-nav="match" onclick="app.navigate('match')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          + Log Match
+        </button>
+        <button data-nav="shuffler" onclick="app.navigate('shuffler')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          🎲 Smart Shuffle
+        </button>
+        <button data-nav="americano" onclick="app.navigate('americano')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          🏆 Americano
+        </button>
+        <button data-nav="leaderboard" onclick="app.navigate('leaderboard')" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          Leaderboard
+        </button>
+      </nav>
+
+      <!-- User Status Pill -->
+      <div id="header-user-area" class="flex items-center gap-2">
+        <button onclick="app.navigate('auth')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition">
+          Sign Up / Log In
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom/Sub Navigation -->
+    <div id="mobile-nav" class="md:hidden border-t border-slate-100 bg-white px-2 py-1.5 flex items-center justify-around overflow-x-auto no-scrollbar gap-1">
+      <button data-nav="dashboard" onclick="app.navigate('dashboard')" class="nav-btn flex-1 py-2 px-2 rounded-xl text-xs font-semibold text-slate-600 text-center whitespace-nowrap">
+        Home
+      </button>
+      <button data-nav="match" onclick="app.navigate('match')" class="nav-btn flex-1 py-2 px-2 rounded-xl text-xs font-semibold text-slate-600 text-center whitespace-nowrap">
+        + Match
+      </button>
+      <button data-nav="shuffler" onclick="app.navigate('shuffler')" class="nav-btn flex-1 py-2 px-2 rounded-xl text-xs font-semibold text-slate-600 text-center whitespace-nowrap">
+        🎲 Shuffle
+      </button>
+      <button data-nav="americano" onclick="app.navigate('americano')" class="nav-btn flex-1 py-2 px-2 rounded-xl text-xs font-semibold text-slate-600 text-center whitespace-nowrap">
+        🏆 Americano
+      </button>
+      <button data-nav="leaderboard" onclick="app.navigate('leaderboard')" class="nav-btn flex-1 py-2 px-2 rounded-xl text-xs font-semibold text-slate-600 text-center whitespace-nowrap">
+        Rankings
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: AUTH / SIGN UP & EMAIL OTP VERIFICATION                       -->
+    <!-- ===================================================================== -->
+    <section id="view-auth" class="view-section hidden max-w-xl mx-auto">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="court-gradient px-6 py-7 text-white">
+          <span class="inline-block px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide uppercase mb-2">
+            Official Club Onboarding
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Create Your Padeloq Profile</h1>
+          <p class="text-emerald-100 text-sm mt-1">
+            Verify your email, set up your player card, and take our 5-question assessment to get your official Padel Category (D- to A).
+          </p>
+        </div>
+
+        <div class="p-6 sm:p-8">
+          <!-- Mode Switcher: New Player vs Existing Player -->
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl mb-6">
+            <button type="button" id="tab-signup" onclick="app.switchAuthTab('signup')" class="py-2.5 rounded-xl text-sm font-bold bg-white text-slate-900 shadow-sm transition">
+              New Player Sign Up
+            </button>
+            <button type="button" id="tab-signin" onclick="app.switchAuthTab('signin')" class="py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
+              Existing Email Sign In
+            </button>
+          </div>
+
+          <!-- EXISTING EMAIL SIGN-IN FORM -->
+          <form id="signin-form" onsubmit="app.handleExistingEmailSignIn(event)" class="hidden space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">Registered Email Address</label>
+              <input type="email" id="signin-email" required placeholder="you@example.com" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm" />
+            </div>
+            <button type="submit" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+              Sign In to My Player Card →
+            </button>
+          </form>
+
+          <!-- STEP 1: REGISTRATION DETAILS -->
+          <form id="signup-form" onsubmit="app.handleRegisterStep1(event)" class="space-y-4">
+            <!-- Profile Photo Upload -->
+            <div class="flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+              <div id="photo-preview-box" class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-extrabold text-xl overflow-hidden shrink-0 border border-emerald-200">
+                📷
+              </div>
+              <div class="flex-1 min-w-0">
+                <label class="block text-sm font-bold text-slate-800">Profile Photo</label>
+                <p class="text-xs text-slate-500 mb-2">Optional — upload a headshot for your player card.</p>
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 cursor-pointer transition">
+                  <span>Choose Photo</span>
+                  <input type="file" id="reg-photo" accept="image/*" onchange="app.handlePhotoUpload(event, 'reg')" class="hidden" />
+                </label>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Full Name *</label>
+                <input type="text" id="reg-name" required placeholder="e.g. Tariq Al Mansoori" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email Address *</label>
+                <input type="email" id="reg-email" required placeholder="player@club.com" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Gender *</label>
+                <select id="reg-gender" required class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                  <option value="">Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Country *</label>
+                <select id="reg-country" onchange="app.handleCountryChange()" required class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                  <option value="United Arab Emirates">United Arab Emirates</option>
+                  <option value="Saudi Arabia">Saudi Arabia</option>
+                  <option value="Qatar">Qatar</option>
+                  <option value="Kuwait">Kuwait</option>
+                  <option value="Spain">Spain</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="United States">United States</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">City *</label>
+                <input type="text" id="reg-city" required value="Dubai" placeholder="e.g. Dubai" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Preferred Court Side</label>
+                <select id="reg-side" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                  <option value="Right (Drive)">Right Side (Drive)</option>
+                  <option value="Left (Revés)">Left Side (Revés)</option>
+                  <option value="Both Sides">Both Sides</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Dominant Hand</label>
+                <select id="reg-hand" class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                  <option value="Right-Handed">Right-Handed</option>
+                  <option value="Left-Handed">Left-Handed</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+              Send Email Verification Code →
+            </button>
+          </form>
+
+          <!-- STEP 2: EMAIL OTP VERIFICATION -->
+          <div id="otp-verification-box" class="hidden space-y-5">
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Verification Code Ready</span>
+                  <p class="text-sm text-slate-700 mt-1">
+                    Verifying <strong id="otp-target-email" class="text-slate-900"></strong>
+                  </p>
+                  <p class="text-xs text-slate-500 mt-1">
+                    Instant Sandbox OTP: <span id="otp-display-code" class="font-mono font-extrabold text-base text-emerald-800 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">------</span>
+                  </p>
+                </div>
+                <button type="button" onclick="app.autoFillOtp()" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shrink-0 transition">
+                  Auto-Fill Code
+                </button>
+              </div>
+            </div>
+
+            <form onsubmit="app.handleVerifyOtp(event)" class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Enter 6-Digit Verification OTP</label>
+                <input type="text" id="otp-input" maxlength="6" required placeholder="000000" class="w-full px-4 py-3.5 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none text-center font-mono text-2xl tracking-[0.4em] font-bold" />
+              </div>
+              <div class="flex gap-3">
+                <button type="button" onclick="app.backToSignupForm()" class="px-4 py-3 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+                  ← Edit Email
+                </button>
+                <button type="submit" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+                  Verify Email &amp; Start Level Quiz →
+                </button>
+              </div>
+            </form>
+
+            <!-- Optional Real Email Delivery Config (EmailJS) -->
+            <details class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-600">
+              <summary class="font-semibold text-slate-800 cursor-pointer">
+                ⚙️ Optional: Connect Real Inbox Delivery (EmailJS)
+              </summary>
+              <div class="mt-3 space-y-2.5">
+                <p>To dispatch real OTP emails to players' inboxes, paste your free EmailJS credentials:</p>
+                <input type="text" id="emailjs-public-key" placeholder="EmailJS Public Key" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+                <input type="text" id="emailjs-service-id" placeholder="Service ID (e.g. service_xxx)" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+                <input type="text" id="emailjs-template-id" placeholder="Template ID (e.g. template_xxx)" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white" />
+                <button type="button" onclick="app.saveEmailJsConfig()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white font-semibold">
+                  Save &amp; Resend Real Email
+                </button>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: 5-QUESTION PADEL SKILL ASSESSMENT QUIZ                        -->
+    <!-- ===================================================================== -->
+    <section id="view-quiz" class="view-section hidden max-w-2xl mx-auto">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="court-gradient px-6 py-6 text-white">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-100 mb-2">
+            <span>Mandatory Skill Calibration</span>
+            <span id="quiz-progress-label">Question 1 of 5</span>
+          </div>
+          <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+            <div id="quiz-progress-bar" class="h-full bg-amber-300 transition-all duration-300" style="width: 20%"></div>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-extrabold mt-3">Determine Your Padel Category</h2>
+          <p class="text-xs sm:text-sm text-emerald-100 mt-1">
+            Your answers strictly calibrate your starting category (D- through A) and numeric rating.
+          </p>
+        </div>
+
+        <div id="quiz-body" class="p-6 sm:p-8">
+          <!-- Dynamic Question Container -->
+          <div id="quiz-question-container"></div>
+
+          <!-- Quiz Result Container (Hidden until 5 questions answered) -->
+          <div id="quiz-result-container" class="hidden text-center space-y-6">
+            <div class="inline-flex flex-col items-center justify-center w-36 h-36 rounded-3xl court-gradient text-white shadow-lg mx-auto">
+              <span class="text-xs font-bold uppercase tracking-widest text-emerald-200">Assigned Level</span>
+              <span id="quiz-result-cat" class="text-4xl font-extrabold mt-1">D+</span>
+              <span id="quiz-result-num" class="text-sm font-semibold text-amber-300 mt-0.5">2.75 / 7.00</span>
+            </div>
+
+            <div>
+              <h3 id="quiz-result-title" class="text-xl font-extrabold text-slate-900">Developing Club Player</h3>
+              <p id="quiz-result-desc" class="text-sm text-slate-600 max-w-md mx-auto mt-1.5"></p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+              <button type="button" onclick="app.retakeQuizQuestions()" class="px-5 py-3 rounded-2xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition">
+                ↺ Re-answer Questions
+              </button>
+              <button type="button" onclick="app.confirmQuizProfile()" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+                Save Profile &amp; Enter Club →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: CLUB DASHBOARD                                                -->
+    <!-- ===================================================================== -->
+    <section id="view-dashboard" class="view-section space-y-6">
+      <!-- Hero Banner -->
+      <div class="court-gradient rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold mb-3">
+              🎾 Padeloq Club Hub
+            </span>
+            <h1 id="dash-welcome" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Welcome to Padeloq
+            </h1>
+            <p id="dash-subtitle" class="text-emerald-100 text-sm sm:text-base mt-1 max-w-xl">
+              Track doubles matches, balance 8-player sessions without repeat partners, and run live Americano tournaments.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-2.5">
+            <button onclick="app.navigate('match')" class="px-4 py-3 rounded-2xl bg-white text-emerald-900 font-bold text-sm shadow hover:bg-emerald-50 transition">
+              + Log Match Score
+            </button>
+            <button onclick="app.navigate('shuffler')" class="px-4 py-3 rounded-2xl bg-emerald-800/80 hover:bg-emerald-800 text-white border border-white/20 font-bold text-sm transition">
+              🎲 8-Player Shuffle
+            </button>
+            <button onclick="app.navigate('americano')" class="px-4 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow transition">
+              🏆 Start Americano
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Club KPIs -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Club Players</span>
+          <div id="kpi-players" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0</div>
+          <span class="text-xs text-emerald-600 font-medium">Verified &amp; calibrated</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Matches Played</span>
+          <div id="kpi-matches" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0</div>
+          <span class="text-xs text-slate-500 font-medium">Ranked doubles sets</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Your Level</span>
+          <div id="kpi-my-cat" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">Guest</div>
+          <span id="kpi-my-rating" class="text-xs text-slate-500 font-medium">Sign up to calibrate</span>
+        </div>
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-semibold text-slate-500 uppercase">Your Record</span>
+          <div id="kpi-my-record" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0W - 0L</div>
+          <span id="kpi-my-winrate" class="text-xs text-slate-500 font-medium">0% win rate</span>
+        </div>
+      </div>
+
+      <!-- Two Column Feed: Recent Matches & Top Ranked -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Matches -->
+        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-extrabold text-slate-900">Recent Club Matches</h2>
+            <button onclick="app.navigate('match')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">
+              + Record Score
+            </button>
+          </div>
+          <div id="dashboard-recent-matches" class="space-y-3"></div>
+        </div>
+
+        <!-- Top Club Players -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-extrabold text-slate-900">Top Rated Players</h2>
+            <button onclick="app.navigate('leaderboard')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">
+              Full Standings →
+            </button>
+          </div>
+          <div id="dashboard-top-players" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 4: LOG DOUBLES MATCH & SCORE                                     -->
+    <!-- ===================================================================== -->
+    <section id="view-match" class="view-section hidden max-w-3xl mx-auto">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="court-gradient px-6 py-6 text-white">
+          <h2 class="text-2xl font-extrabold">Log Doubles Match Score</h2>
+          <p class="text-emerald-100 text-sm mt-1">
+            Select both pairs and enter set scores. Player ratings and Categories (D- to A) update automatically via Elo calculation.
+          </p>
+        </div>
+
+        <form onsubmit="app.handleMatchSubmit(event)" class="p-6 sm:p-8 space-y-6">
+          <!-- Teams Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Team A -->
+            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-emerald-900 text-sm uppercase tracking-wide">Team A</span>
+                <span id="teamA-avg-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900">Avg: --</span>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Player A1</label>
+                <select id="match-a1" onchange="app.updateMatchTeamBadges()" required class="player-select w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Player A2</label>
+                <select id="match-a2" onchange="app.updateMatchTeamBadges()" required class="player-select w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium"></select>
+              </div>
+            </div>
+
+            <!-- Team B -->
+            <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-sky-900 text-sm uppercase tracking-wide">Team B</span>
+                <span id="teamB-avg-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-200 text-sky-900">Avg: --</span>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Player B1</label>
+                <select id="match-b1" onchange="app.updateMatchTeamBadges()" required class="player-select w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Player B2</label>
+                <select id="match-b2" onchange="app.updateMatchTeamBadges()" required class="player-select w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Add Guest Player Inline -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <span class="text-xs font-bold text-slate-600 whitespace-nowrap">+ Quick Guest:</span>
+            <input type="text" id="quick-guest-name" placeholder="Friend's Name" class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs" />
+            <select id="quick-guest-rating" class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold">
+              <option value="1.5">D- (1.50)</option>
+              <option value="2.1">D (2.10)</option>
+              <option value="2.75" selected>D+ (2.75)</option>
+              <option value="3.3">C- (3.30)</option>
+              <option value="3.9">C (3.90)</option>
+              <option value="4.5">C+ (4.50)</option>
+              <option value="5.1">B- (5.10)</option>
+            </select>
+            <button type="button" onclick="app.addQuickGuest()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition">
+              Add Player
+            </button>
+          </div>
+
+          <!-- Set Scores Table -->
+          <div class="rounded-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 px-4 py-2.5 grid grid-cols-4 text-xs font-bold text-slate-600 uppercase text-center">
+              <div class="text-left">Team</div>
+              <div>Set 1 *</div>
+              <div>Set 2</div>
+              <div>Set 3 / Tiebreak</div>
+            </div>
+            <div class="divide-y divide-slate-200">
+              <div class="px-4 py-3 grid grid-cols-4 items-center gap-2 bg-white">
+                <div class="font-bold text-sm text-emerald-800">Team A</div>
+                <input type="number" id="set1-a" min="0" max="7" value="6" required class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+                <input type="number" id="set2-a" min="0" max="7" value="6" class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+                <input type="number" id="set3-a" min="0" max="15" placeholder="-" class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+              </div>
+              <div class="px-4 py-3 grid grid-cols-4 items-center gap-2 bg-white">
+                <div class="font-bold text-sm text-sky-800">Team B</div>
+                <input type="number" id="set1-b" min="0" max="7" value="4" required class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+                <input type="number" id="set2-b" min="0" max="7" value="3" class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+                <input type="number" id="set3-b" min="0" max="15" placeholder="-" class="w-full py-2 text-center font-bold rounded-xl border border-slate-300" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Match Options -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Club / Court Location</label>
+              <input type="text" id="match-venue" placeholder="e.g. Padeloq Arena Court 2" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm" />
+            </div>
+            <div class="flex items-center gap-3 pt-4 sm:pt-5">
+              <input type="checkbox" id="match-golden-point" checked class="w-4 h-4 rounded text-emerald-600" />
+              <label for="match-golden-point" class="text-sm font-medium text-slate-700">Golden Point (Punto de Oro) played</label>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition">
+            Save Match Result &amp; Update Ratings
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 5: 8-PLAYER SMART SESSION SHUFFLER (ANTI-REPETITION + BALANCE)   -->
+    <!-- ===================================================================== -->
+    <section id="view-shuffler" class="view-section hidden space-y-6">
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="court-gradient px-6 py-6 text-white">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h2 class="text-2xl font-extrabold">🎲 Smart Session Shuffler</h2>
+              <p class="text-emerald-100 text-sm mt-1">
+                Select 4 players (1 court) or 8 players (2 courts). Uses all-time match history + session toss history to minimize repeat partners and keep teams balanced.
+              </p>
+            </div>
+            <span id="shuffle-selected-count" class="px-4 py-2 rounded-2xl bg-white/15 font-extrabold text-sm self-start">
+              0 / 8 Selected
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Player Selection Pool -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">1. Tap Players Attending Today</h3>
+              <div class="flex gap-2">
+                <button type="button" onclick="app.selectTop8ForShuffle()" class="text-xs font-bold text-emerald-600 hover:underline">
+                  Auto-Pick 8
+                </button>
+                <button type="button" onclick="app.clearShuffleSelection()" class="text-xs font-semibold text-slate-500 hover:underline">
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div id="shuffle-player-pool" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+          </div>
+
+          <!-- Shuffle Mode & Action -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="flex-1">
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Matchmaking Priority</label>
+              <select id="shuffle-mode" class="w-full sm:w-auto px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold">
+                <option value="hybrid">Smart Hybrid (Variety + Skill Balance)</option>
+                <option value="variety">Maximum Variety (Zero Repeat Partners)</option>
+                <option value="balance">Strict Skill Balance (Closest Ratings)</option>
+              </select>
+            </div>
+            <div class="flex gap-2.5">
+              <button type="button" onclick="app.resetSessionTossHistory()" class="px-4 py-3 rounded-2xl border border-slate-300 bg-white text-slate-700 text-xs font-bold hover:bg-slate-100 transition">
+                Reset Session History
+              </button>
+              <button type="button" onclick="app.generateSmartShuffle()" class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition">
+                🎲 Generate Courts
+              </button>
+            </div>
+          </div>
+
+          <!-- Generated Courts Output -->
+          <div id="shuffle-results-area" class="hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-extrabold text-slate-900">Generated Court Lineups</h3>
+              <span id="shuffle-round-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">Toss #1</span>
+            </div>
+            <div id="shuffle-courts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 6: AMERICANO TOURNAMENT MODE (4, 8, OR 12 PLAYERS)               -->
+    <!-- ===================================================================== -->
+    <section id="view-americano" class="view-section hidden space-y-6">
+      <!-- Americano Setup Card -->
+      <div id="americano-setup-card" class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="court-gradient px-6 py-6 text-white">
+          <h2 class="text-2xl font-extrabold">🏆 Americano Tournament</h2>
+          <p class="text-emerald-100 text-sm mt-1">
+            Rotate partners every round and compete for individual points. Supports 4, 8, or 12 players.
+          </p>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tournament Name</label>
+              <input type="text" id="americano-title" value="Friday Night Americano" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Format Size</label>
+              <select id="americano-size" onchange="app.updateAmericanoSelectionCount()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+                <option value="4">4 Players (1 Court · 3 Rounds)</option>
+                <option value="8" selected>8 Players (2 Courts · 7 Rounds)</option>
+                <option value="12">12 Players (3 Courts · 11 Rounds)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Points Per Round</label>
+              <select id="americano-points" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white">
+                <option value="16">16 Points</option>
+                <option value="21">21 Points</option>
+                <option value="24" selected>24 Points</option>
+                <option value="32">32 Points</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="text-xs font-extrabold uppercase text-slate-700">Select Participants</span>
+              <span id="americano-selected-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">0 / 8 Selected</span>
+            </div>
+            <div id="americano-player-pool" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+          </div>
+
+          <button type="button" onclick="app.startAmericanoTournament()" class="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition">
+            🏆 Launch Americano Schedule
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Americano Live Board -->
+      <div id="americano-active-board" class="hidden space-y-6">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Live Americano</span>
+            <h2 id="americano-live-title" class="text-2xl font-extrabold text-slate-900">Friday Night Americano</h2>
+            <p id="americano-live-meta" class="text-xs text-slate-500 mt-0.5">24 Points per round · 8 Players</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="app.finishAndSyncAmericano()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow transition">
+              ✅ Finish &amp; Save Results to Club
+            </button>
+            <button type="button" onclick="app.discardAmericano()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition">
+              End / New Setup
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Rounds & Match Score Entry -->
+          <div class="lg:col-span-2 space-y-4" id="americano-rounds-container"></div>
+
+          <!-- Live Individual Americano Standings -->
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 self-start sticky top-20">
+            <h3 class="text-base font-extrabold text-slate-900 mb-3">Live Standings</h3>
+            <div id="americano-standings-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 7: CLUB LEADERBOARD                                              -->
+    <!-- ===================================================================== -->
+    <section id="view-leaderboard" class="view-section hidden space-y-6">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">Club Leaderboard</h2>
+            <p class="text-sm text-slate-500">Official Padeloq rankings sorted by dynamic numeric rating and Category.</p>
+          </div>
+
+          <!-- Category Filters -->
+          <div class="flex flex-wrap gap-1.5" id="leaderboard-filters">
+            <button onclick="app.setLeaderboardFilter('ALL')" data-filter="ALL" class="lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white">All Levels</button>
+            <button onclick="app.setLeaderboardFilter('D')" data-filter="D" class="lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700">D (D- / D / D+)</button>
+            <button onclick="app.setLeaderboardFilter('C')" data-filter="C" class="lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700">C (C- / C / C+)</button>
+            <button onclick="app.setLeaderboardFilter('BA')" data-filter="BA" class="lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700">B &amp; A</button>
+          </div>
+        </div>
+
+        <div id="leaderboard-table-body" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 8: PLAYER PROFILE                                                -->
+    <!-- ===================================================================== -->
+    <section id="view-profile" class="view-section hidden max-w-3xl mx-auto space-y-6">
+      <div id="profile-card-container" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden"></div>
+    </section>
+
+  </main>
+
+  <!-- Main Application Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, addDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // =========================================================================
+    // 1. STATE & CONSTANTS
+    // =========================================================================
+    const STORAGE_KEY = 'padeloq_club_state_v2';
+
+    const QUIZ_QUESTIONS = [
+      {
+        title: "1. Padel & Racket Sports Background",
+        subtitle: "How long have you been playing padel regularly?",
+        options: [
+          { label: "Brand new to padel (0–3 months), little or no racket experience", score: 1.5 },
+          { label: "3–12 months of social padel, learning basic rules and strokes", score: 2.2 },
+          { label: "1–2 years playing weekly, or strong tennis/squash background", score: 3.1 },
+          { label: "2–4 years of competitive club matches and leagues", score: 4.1 },
+          { label: "4+ years tournament player with advanced tactical mastery", score: 5.2 }
+        ]
+      },
+      {
+        title: "2. Back & Side Glass Defense",
+        subtitle: "How comfortable are you letting the ball bounce off the glass before returning?",
+        options: [
+          { label: "I try to hit every ball before it touches the glass", score: 1.4 },
+          { label: "I can return slow, straight bounces off the back glass", score: 2.3 },
+          { label: "Comfortable with back glass and basic corner/side-glass turns", score: 3.2 },
+          { label: "Confident defending fast rebounds and playing counter-attacking lobs", score: 4.2 },
+          { label: "Effortless double-glass reads, bajadas, and defensive resets under pressure", score: 5.4 }
+        ]
+      },
+      {
+        title: "3. Net Play, Volleys & Overheads",
+        subtitle: "Describe your control when positioned at the net.",
+        options: [
+          { label: "Still learning continental grip; mostly pushing balls back", score: 1.5 },
+          { label: "Consistent basic forehand/backhand volleys at medium pace", score: 2.3 },
+          { label: "Reliable control volleys and developing Bandeja overhead", score: 3.3 },
+          { label: "Consistent Bandeja/Víbora with spin and targeted depth", score: 4.3 },
+          { label: "Dominant net pressure with Víbora, Rulo, and kick smashes (Por 3)", score: 5.5 }
+        ]
+      },
+      {
+        title: "4. Partner Movement & Court Positioning",
+        subtitle: "How well do you move together with your partner during points?",
+        options: [
+          { label: "I often stay near the baseline or lose track of court gaps", score: 1.4 },
+          { label: "I come to the net after serving, though we sometimes leave gaps", score: 2.2 },
+          { label: "We move forward and back together as a unit most of the time", score: 3.2 },
+          { label: "Strong transition discipline, using deep lobs to take the net", score: 4.2 },
+          { label: "High-level tactical awareness, covering middle/angles automatically", score: 5.3 }
+        ]
+      },
+      {
+        title: "5. Match Tempo & Competitive Level",
+        subtitle: "What type of matches do you usually win?",
+        options: [
+          { label: "Friendly beginner games focusing on keeping the ball in play", score: 1.5 },
+          { label: "Casual club games (D- / D level)", score: 2.3 },
+          { label: "Regular club ladder / social tournaments (D+ / C- level)", score: 3.2 },
+          { label: "Competitive inter-club leagues (C / C+ level)", score: 4.3 },
+          { label: "Open division tournaments (B / A level)", score: 5.5 }
+        ]
+      }
+    ];
+
+    const state = {
+      currentView: 'dashboard',
+      authUser: null,
+      db: null,
+      appId: typeof __app_id !== 'undefined' ? __app_id : 'padeloq-default',
+      currentPlayerId: null,
+      players: [],
+      matches: [],
+      pendingSignup: null,
+      generatedOtp: null,
+      quizAnswers: [],
+      quizStep: 0,
+      calculatedQuizRating: 2.5,
+      selectedShuffleIds: new Set(),
+      sessionTossHistory: [],
+      selectedAmericanoIds: new Set(),
+      activeAmericano: null,
+      leaderboardFilter: 'ALL'
+    };
+
+    // =========================================================================
+    // 2. PADEL CATEGORY MAPPING (D- TO A)
+    // =========================================================================
+    function getPadelCategory(rating) {
+      const r = Number(rating) || 2.0;
+      if (r < 1.85) return { code: 'D-', label: 'Starter', color: 'bg-slate-100 text-slate-700 border-slate-300' };
+      if (r < 2.45) return { code: 'D', label: 'Beginner+', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      if (r < 3.05) return { code: 'D+', label: 'Developing Club', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+      if (r < 3.65) return { code: 'C-', label: 'Lower Intermediate', color: 'bg-teal-100 text-teal-800 border-teal-300' };
+      if (r < 4.25) return { code: 'C', label: 'Intermediate', color: 'bg-sky-100 text-sky-800 border-sky-300' };
+      if (r < 4.85) return { code: 'C+', label: 'Upper Intermediate', color: 'bg-blue-100 text-blue-800 border-blue-300' };
+      if (r < 5.45) return { code: 'B-', label: 'Pre-Advanced', color: 'bg-indigo-100 text-indigo-800 border-indigo-300' };
+      if (r < 6.05) return { code: 'B', label: 'Advanced', color: 'bg-purple-100 text-purple-800 border-purple-300' };
+      if (r < 6.55) return { code: 'B+', label: 'Competitive Open', color: 'bg-amber-100 text-amber-800 border-amber-300' };
+      return { code: 'A', label: 'Pro / Elite', color: 'bg-rose-100 text-rose-800 border-rose-300' };
+    }
+
+    // =========================================================================
+    // 3. LOCAL STORAGE PERSISTENCE & SAMPLE ROSTER SEED
+    // =========================================================================
+    function seedDefaultClubData() {
+      return [
+        { id: 'p_seed_1', name: 'Tariq Al Mansoori', email: 'tariq@padeloq.club', gender: 'Male', country: 'United Arab Emirates', city: 'Dubai', side: 'Left (Revés)', hand: 'Right-Handed', rating: 3.45, wins: 9, losses: 4, photo: '' },
+        { id: 'p_seed_2', name: 'Sofia Navarro', email: 'sofia@padeloq.club', gender: 'Female', country: 'Spain', city: 'Madrid', side: 'Right (Drive)', hand: 'Right-Handed', rating: 3.95, wins: 12, losses: 3, photo: '' },
+        { id: 'p_seed_3', name: 'Omar Haddad', email: 'omar@padeloq.club', gender: 'Male', country: 'United Arab Emirates', city: 'Dubai', side: 'Right (Drive)', hand: 'Left-Handed', rating: 2.85, wins: 6, losses: 5, photo: '' },
+        { id: 'p_seed_4', name: 'Layla Al Hashimi', email: 'layla@padeloq.club', gender: 'Female', country: 'United Arab Emirates', city: 'Abu Dhabi', side: 'Left (Revés)', hand: 'Right-Handed', rating: 3.15, wins: 7, losses: 6, photo: '' },
+        { id: 'p_seed_5', name: 'Carlos Mendez', email: 'carlos@padeloq.club', gender: 'Male', country: 'Spain', city: 'Barcelona', side: 'Left (Revés)', hand: 'Right-Handed', rating: 4.35, wins: 14, losses: 4, photo: '' },
+        { id: 'p_seed_6', name: 'Nadia Karam', email: 'nadia@padeloq.club', gender: 'Female', country: 'United Arab Emirates', city: 'Dubai', side: 'Right (Drive)', hand: 'Right-Handed', rating: 2.30, wins: 4, losses: 5, photo: '' },
+        { id: 'p_seed_7', name: 'Zayd Farooq', email: 'zayd@padeloq.club', gender: 'Male', country: 'Saudi Arabia', city: 'Riyadh', side: 'Both Sides', hand: 'Right-Handed', rating: 3.60, wins: 8, losses: 6, photo: '' },
+        { id: 'p_seed_8', name: 'Elena Rostova', email: 'elena@padeloq.club', gender: 'Female', country: 'United Arab Emirates', city: 'Dubai', side: 'Left (Revés)', hand: 'Right-Handed', rating: 2.95, wins: 5, losses: 4, photo: '' }
+      ];
+    }
+
+    function saveState() {
+      try {
+        const payload = {
+          currentPlayerId: state.currentPlayerId,
+          players: state.players,
+          matches: state.matches,
+          activeAmericano: state.activeAmericano
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Local state save warning:', e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.players = Array.isArray(parsed.players) && parsed.players.length ? parsed.players : seedDefaultClubData();
+          state.matches = Array.isArray(parsed.matches) ? parsed.matches : [];
+          state.currentPlayerId = parsed.currentPlayerId || null;
+          state.activeAmericano = parsed.activeAmericano || null;
+          return;
+        }
+      } catch (e) {
+        console.warn('Local state read warning:', e);
+      }
+      state.players = seedDefaultClubData();
+      state.matches = [
+        {
+          id: 'm_seed_1',
+          teamA: ['p_seed_1', 'p_seed_2'],
+          teamB: ['p_seed_3', 'p_seed_4'],
+          scoreText: '6-4, 6-3',
+          winner: 'A',
+          venue: 'Padeloq Central Court 1',
+          goldenPoint: true,
+          timestamp: Date.now() - 86400000
+        }
+      ];
+      saveState();
+    }
+
+    // =========================================================================
+    // 4. UI HELPERS & NAVIGATION
+    // =========================================================================
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      const colors = type === 'error'
+        ? 'bg-rose-600 text-white'
+        : type === 'info'
+          ? 'bg-slate-800 text-white'
+          : 'bg-emerald-700 text-white';
+      el.className = `${colors} px-4 py-3 rounded-2xl shadow-lg text-xs sm:text-sm font-semibold pointer-events-auto transition-all duration-300`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3600);
+    }
+
+    function renderAvatar(player, sizeClass = 'w-10 h-10 text-sm') {
+      if (player && player.photo) {
+        return `<img src="${player.photo}" alt="${escapeHtml(player.name)}" class="${sizeClass} rounded-2xl object-cover border border-slate-200 shrink-0" />`;
+      }
+      const initials = (player?.name || '?')
+        .split(' ')
+        .map(w => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+      return `<div class="${sizeClass} rounded-2xl bg-emerald-100 text-emerald-800 font-extrabold flex items-center justify-center border border-emerald-200 shrink-0">${escapeHtml(initials)}</div>`;
+    }
+
+    function navigate(viewName) {
+      state.currentView = viewName;
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.nav === viewName) {
+          btn.classList.add('bg-emerald-50', 'text-emerald-700');
+          btn.classList.remove('text-slate-600');
+        } else {
+          btn.classList.remove('bg-emerald-50', 'text-emerald-700');
+          btn.classList.add('text-slate-600');
+        }
+      });
+
+      refreshAllViews();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function refreshAllViews() {
+      updateHeader();
+      renderDashboard();
+      populateMatchSelectors();
+      renderShufflePool();
+      renderAmericanoView();
+      renderLeaderboard();
+      renderProfileView();
+    }
+
+    function updateHeader() {
+      const area = document.getElementById('header-user-area');
+      const me = state.players.find(p => p.id === state.currentPlayerId);
+      if (!me) {
+        area.innerHTML = `
+          <button onclick="app.navigate('auth')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm transition">
+            Sign Up / Log In
+          </button>
+        `;
+        return;
+      }
+      const cat = getPadelCategory(me.rating);
+      area.innerHTML = `
+        <button onclick="app.navigate('profile')" class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-2xl bg-slate-100 hover:bg-slate-200/80 transition">
+          ${renderAvatar(me, 'w-8 h-8 text-xs')}
+          <div class="text-left hidden sm:block">
+            <div class="text-xs font-extrabold text-slate-900 leading-tight">${escapeHtml(me.name)}</div>
+            <div class="text-[11px] font-bold text-emerald-700">${cat.code} · ${me.rating.toFixed(2)}</div>
+          </div>
+          <span class="sm:hidden text-xs font-extrabold text-emerald-700">${cat.code}</span>
+        </button>
+      `;
+    }
+
+    // =========================================================================
+    // 5. AUTH, PHOTO UPLOAD & EMAIL OTP VERIFICATION
+    // =========================================================================
+    function switchAuthTab(tab) {
+      const signupForm = document.getElementById('signup-form');
+      const signinForm = document.getElementById('signin-form');
+      const otpBox = document.getElementById('otp-verification-box');
+      const tabSignup = document.getElementById('tab-signup');
+      const tabSignin = document.getElementById('tab-signin');
+
+      otpBox.classList.add('hidden');
+      if (tab === 'signin') {
+        signupForm.classList.add('hidden');
+        signinForm.classList.remove('hidden');
+        tabSignin.className = 'py-2.5 rounded-xl text-sm font-bold bg-white text-slate-900 shadow-sm transition';
+        tabSignup.className = 'py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 transition';
+      } else {
+        signinForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+        tabSignup.className = 'py-2.5 rounded-xl text-sm font-bold bg-white text-slate-900 shadow-sm transition';
+        tabSignin.className = 'py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 transition';
+      }
+    }
+
+    function handleCountryChange() {
+      const country = document.getElementById('reg-country').value;
+      const cityInput = document.getElementById('reg-city');
+      const defaults = {
+        'United Arab Emirates': 'Dubai',
+        'Saudi Arabia': 'Riyadh',
+        'Qatar': 'Doha',
+        'Kuwait': 'Kuwait City',
+        'Spain': 'Madrid',
+        'United Kingdom': 'London',
+        'United States': 'Miami'
+      };
+      if (defaults[country]) cityInput.value = defaults[country];
+    }
+
+    function handlePhotoUpload(event, context = 'reg') {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 200;
+          const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.8);
+
+          if (context === 'reg') {
+            state.pendingPhoto = compressed;
+            const preview = document.getElementById('photo-preview-box');
+            if (preview) {
+              preview.innerHTML = `<img src="${compressed}" class="w-full h-full object-cover" />`;
+            }
+          } else if (context === 'profile') {
+            const me = state.players.find(p => p.id === state.currentPlayerId);
+            if (me) {
+              me.photo = compressed;
+              saveState();
+              syncPlayerToCloud(me);
+              refreshAllViews();
+              showToast('Profile photo updated!');
+            }
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleExistingEmailSignIn(event) {
+      event.preventDefault();
+      const email = document.getElementById('signin-email').value.trim().toLowerCase();
+      const existing = state.players.find(p => (p.email || '').toLowerCase() === email);
+      if (!existing) {
+        showToast('No player found with that email. Please create a new profile.', 'error');
+        return;
+      }
+      state.currentPlayerId = existing.id;
+      saveState();
+      showToast(`Welcome back, ${existing.name}!`);
+      navigate('dashboard');
+    }
+
+    async function handleRegisterStep1(event) {
+      event.preventDefault();
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim().toLowerCase();
+      const gender = document.getElementById('reg-gender').value;
+      const country = document.getElementById('reg-country').value;
+      const city = document.getElementById('reg-city').value.trim();
+      const side = document.getElementById('reg-side').value;
+      const hand = document.getElementById('reg-hand').value;
+
+      if (!gender) {
+        showToast('Please select your gender.', 'error');
+        return;
+      }
+
+      // Duplicate Email Check
+      const duplicate = state.players.find(p => (p.email || '').toLowerCase() === email);
+      if (duplicate) {
+        showToast('This email is already registered! Switching to Sign In.', 'error');
+        switchAuthTab('signin');
+        document.getElementById('signin-email').value = email;
+        return;
+      }
+
+      state.pendingSignup = {
+        name,
+        email,
+        gender,
+        country,
+        city,
+        side,
+        hand,
+        photo: state.pendingPhoto || ''
+      };
+
+      // Generate 6-digit OTP
+      state.generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
+
+      document.getElementById('signup-form').classList.add('hidden');
+      document.getElementById('otp-verification-box').classList.remove('hidden');
+      document.getElementById('otp-target-email').textContent = email;
+      document.getElementById('otp-display-code').textContent = state.generatedOtp;
+      document.getElementById('otp-input').value = '';
+
+      // Attempt optional EmailJS dispatch if user configured keys
+      await trySendEmailJsOtp(email, name, state.generatedOtp);
+      showToast(`Verification code generated for ${email}`);
+    }
+
+    async function trySendEmailJsOtp(email, name, code) {
+      const pubKey = localStorage.getItem('padeloq_ejs_pub');
+      const serviceId = localStorage.getItem('padeloq_ejs_srv');
+      const templateId = localStorage.getItem('padeloq_ejs_tpl');
+      if (!pubKey || !serviceId || !templateId) return;
+
+      try {
+        await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service_id: serviceId,
+            template_id: templateId,
+            user_id: pubKey,
+            template_params: {
+              to_email: email,
+              to_name: name,
+              otp_code: code
+            }
+          })
+        });
+        showToast('Real OTP email dispatched to your inbox!');
+      } catch (err) {
+        console.warn('EmailJS dispatch note:', err);
+      }
+    }
+
+    function saveEmailJsConfig() {
+      const pub = document.getElementById('emailjs-public-key').value.trim();
+      const srv = document.getElementById('emailjs-service-id').value.trim();
+      const tpl = document.getElementById('emailjs-template-id').value.trim();
+      if (!pub || !srv || !tpl) {
+        showToast('Please enter Public Key, Service ID, and Template ID.', 'error');
+        return;
+      }
+      localStorage.setItem('padeloq_ejs_pub', pub);
+      localStorage.setItem('padeloq_ejs_srv', srv);
+      localStorage.setItem('padeloq_ejs_tpl', tpl);
+      if (state.pendingSignup && state.generatedOtp) {
+        trySendEmailJsOtp(state.pendingSignup.email, state.pendingSignup.name, state.generatedOtp);
+      }
+    }
+
+    function autoFillOtp() {
+      if (state.generatedOtp) {
+        document.getElementById('otp-input').value = state.generatedOtp;
+        showToast('Verification code filled!');
+      }
+    }
+
+    function backToSignupForm() {
+      document.getElementById('otp-verification-box').classList.add('hidden');
+      document.getElementById('signup-form').classList.remove('hidden');
+    }
+
+    function handleVerifyOtp(event) {
+      event.preventDefault();
+      const entered = document.getElementById('otp-input').value.trim();
+      if (entered !== state.generatedOtp) {
+        showToast('Incorrect OTP code. Click "Auto-Fill Code" or check the 6 digits.', 'error');
+        return;
+      }
+      showToast('Email verified! Complete the 5-question level quiz.');
+      startQuizFlow();
+    }
+
+    // =========================================================================
+    // 6. 5-QUESTION SKILL QUIZ (STRICTLY CALIBRATES CATEGORY D- TO A)
+    // =========================================================================
+    function startQuizFlow() {
+      state.quizAnswers = [];
+      state.quizStep = 0;
+      document.getElementById('quiz-result-container').classList.add('hidden');
+      document.getElementById('quiz-question-container').classList.remove('hidden');
+      navigate('quiz');
+      renderQuizStep();
+    }
+
+    function renderQuizStep() {
+      const q = QUIZ_QUESTIONS[state.quizStep];
+      const pct = Math.round(((state.quizStep + 1) / QUIZ_QUESTIONS.length) * 100);
+      document.getElementById('quiz-progress-label').textContent = `Question ${state.quizStep + 1} of ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+      const container = document.getElementById('quiz-question-container');
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900">${escapeHtml(q.title)}</h3>
+            <p class="text-sm text-slate-500 mt-0.5">${escapeHtml(q.subtitle)}</p>
+          </div>
+          <div class="space-y-2.5 pt-1">
+            ${q.options.map((opt, idx) => `
+              <button type="button" onclick="app.selectQuizOption(${idx})"
+                class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/60 transition flex items-center justify-between gap-3 group">
+                <span class="text-sm font-medium text-slate-800 group-hover:text-emerald-950">${escapeHtml(opt.label)}</span>
+                <span class="w-6 h-6 rounded-full border border-slate-300 group-hover:border-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center text-xs font-bold shrink-0">
+                  ${idx + 1}
+                </span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectQuizOption(optionIdx) {
+      const q = QUIZ_QUESTIONS[state.quizStep];
+      state.quizAnswers[state.quizStep] = q.options[optionIdx].score;
+
+      if (state.quizStep < QUIZ_QUESTIONS.length - 1) {
+        state.quizStep++;
+        renderQuizStep();
+      } else {
+        // Compute strict average from the 5 answers
+        const sum = state.quizAnswers.reduce((acc, v) => acc + v, 0);
+        const avg = Number((sum / QUIZ_QUESTIONS.length).toFixed(2));
+        state.calculatedQuizRating = avg;
+
+        const cat = getPadelCategory(avg);
+        document.getElementById('quiz-question-container').classList.add('hidden');
+        document.getElementById('quiz-result-container').classList.remove('hidden');
+        document.getElementById('quiz-result-cat').textContent = cat.code;
+        document.getElementById('quiz-result-num').textContent = `${avg.toFixed(2)} / 7.00`;
+        document.getElementById('quiz-result-title').textContent = `${cat.label} (${cat.code})`;
+        document.getElementById('quiz-result-desc').textContent =
+          `Based strictly on your 5 technical and tactical responses, your official Padeloq starting level is ${cat.code} (${avg.toFixed(2)}).`;
+      }
+    }
+
+    function retakeQuizQuestions() {
+      startQuizFlow();
+    }
+
+    function confirmQuizProfile() {
+      const cat = getPadelCategory(state.calculatedQuizRating);
+
+      // Retaking quiz for an already logged-in user
+      if (!state.pendingSignup && state.currentPlayerId) {
+        const me = state.players.find(p => p.id === state.currentPlayerId);
+        if (me) {
+          me.rating = state.calculatedQuizRating;
+          saveState();
+          syncPlayerToCloud(me);
+          showToast(`Level recalibrated to ${cat.code} (${me.rating.toFixed(2)})!`);
+          navigate('profile');
+          return;
+        }
+      }
+
+      if (!state.pendingSignup) {
+        navigate('auth');
+        return;
+      }
+
+      const newPlayer = {
+        id: 'p_' + Date.now(),
+        name: state.pendingSignup.name,
+        email: state.pendingSignup.email,
+        gender: state.pendingSignup.gender,
+        country: state.pendingSignup.country,
+        city: state.pendingSignup.city,
+        side: state.pendingSignup.side,
+        hand: state.pendingSignup.hand,
+        photo: state.pendingSignup.photo || '',
+        rating: state.calculatedQuizRating,
+        wins: 0,
+        losses: 0,
+        createdAt: Date.now()
+      };
+
+      state.players.push(newPlayer);
+      state.currentPlayerId = newPlayer.id;
+      state.pendingSignup = null;
+      state.pendingPhoto = '';
+      saveState();
+      syncPlayerToCloud(newPlayer);
+
+      showToast(`Welcome ${newPlayer.name}! Assigned Level ${cat.code}.`);
+      navigate('dashboard');
+    }
+
+    // =========================================================================
+    // 7. DASHBOARD RENDERING
+    // =========================================================================
+    function renderDashboard() {
+      const me = state.players.find(p => p.id === state.currentPlayerId);
+      document.getElementById('kpi-players').textContent = state.players.length;
+      document.getElementById('kpi-matches').textContent = state.matches.length;
+
+      if (me) {
+        const cat = getPadelCategory(me.rating);
+        const total = (me.wins || 0) + (me.losses || 0);
+        const wr = total > 0 ? Math.round((me.wins / total) * 100) : 0;
+        document.getElementById('dash-welcome').textContent = `Welcome back, ${me.name}!`;
+        document.getElementById('kpi-my-cat').textContent = cat.code;
+        document.getElementById('kpi-my-rating').textContent = `${me.rating.toFixed(2)} · ${cat.label}`;
+        document.getElementById('kpi-my-record').textContent = `${me.wins || 0}W - ${me.losses || 0}L`;
+        document.getElementById('kpi-my-winrate').textContent = `${wr}% win rate`;
+      } else {
+        document.getElementById('dash-welcome').textContent = 'Welcome to Padeloq';
+        document.getElementById('kpi-my-cat').textContent = 'Unranked';
+        document.getElementById('kpi-my-rating').textContent = 'Sign up to take level quiz';
+        document.getElementById('kpi-my-record').textContent = '0W - 0L';
+        document.getElementById('kpi-my-winrate').textContent = 'Create profile to track';
+      }
+
+      // Recent Matches
+      const recentBox = document.getElementById('dashboard-recent-matches');
+      if (!state.matches.length) {
+        recentBox.innerHTML = `<p class="text-sm text-slate-500 py-4 text-center">No matches recorded yet. Tap "+ Log Match Score" to record your first game!</p>`;
+      } else {
+        recentBox.innerHTML = [...state.matches]
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+          .slice(0, 5)
+          .map(m => {
+            const aNames = m.teamA.map(id => getPlayerName(id)).join(' & ');
+            const bNames = m.teamB.map(id => getPlayerName(id)).join(' & ');
+            return `
+              <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="space-y-1 text-xs sm:text-sm">
+                  <div class="${m.winner === 'A' ? 'font-extrabold text-emerald-800' : 'font-medium text-slate-700'}">
+                    ${m.winner === 'A' ? '🏆 ' : ''}${escapeHtml(aNames)}
+                  </div>
+                  <div class="${m.winner === 'B' ? 'font-extrabold text-emerald-800' : 'font-medium text-slate-700'}">
+                    ${m.winner === 'B' ? '🏆 ' : ''}${escapeHtml(bNames)}
+                  </div>
+                  ${m.venue ? `<div class="text-[11px] text-slate-400">📍 ${escapeHtml(m.venue)}</div>` : ''}
+                </div>
+                <div class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 font-mono font-extrabold text-xs sm:text-sm text-slate-900 self-start sm:self-center">
+                  ${escapeHtml(m.scoreText)}
+                </div>
+              </div>
+            `;
+          }).join('');
+      }
+
+      // Top Players
+      const topBox = document.getElementById('dashboard-top-players');
+      const sorted = [...state.players].sort((a, b) => b.rating - a.rating).slice(0, 5);
+      topBox.innerHTML = sorted.map((p, i) => {
+        const cat = getPadelCategory(p.rating);
+        return `
+          <div class="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl hover:bg-slate-50 transition">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-5 text-xs font-extrabold text-slate-400">#${i + 1}</span>
+              ${renderAvatar(p, 'w-9 h-9 text-xs')}
+              <div class="min-w-0">
+                <div class="text-xs sm:text-sm font-bold text-slate-900 truncate">${escapeHtml(p.name)}</div>
+                <div class="text-[11px] text-slate-500">${p.wins || 0}W-${p.losses || 0}L</div>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-xl border text-xs font-extrabold ${cat.color} shrink-0">
+              ${cat.code} · ${p.rating.toFixed(2)}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getPlayerName(id) {
+      const p = state.players.find(x => x.id === id);
+      return p ? p.name : 'Guest Player';
+    }
+
+    // =========================================================================
+    // 8. DOUBLES MATCH LOGGER & ELO RATING ENGINE
+    // =========================================================================
+    function populateMatchSelectors() {
+      const selects = ['match-a1', 'match-a2', 'match-b1', 'match-b2'];
+      const optionsHtml = state.players.map(p => {
+        const cat = getPadelCategory(p.rating);
+        return `<option value="${p.id}">${escapeHtml(p.name)} [${cat.code} · ${p.rating.toFixed(2)}]</option>`;
+      }).join('');
+
+      selects.forEach((selId, idx) => {
+        const el = document.getElementById(selId);
+        if (!el) return;
+        const prev = el.value;
+        el.innerHTML = optionsHtml;
+        if (prev && state.players.some(p => p.id === prev)) {
+          el.value = prev;
+        } else if (state.players[idx]) {
+          el.value = state.players[idx].id;
+        }
+      });
+      updateMatchTeamBadges();
+    }
+
+    function updateMatchTeamBadges() {
+      const a1 = state.players.find(p => p.id === document.getElementById('match-a1')?.value);
+      const a2 = state.players.find(p => p.id === document.getElementById('match-a2')?.value);
+      const b1 = state.players.find(p => p.id === document.getElementById('match-b1')?.value);
+      const b2 = state.players.find(p => p.id === document.getElementById('match-b2')?.value);
+
+      if (a1 && a2) {
+        const avgA = (a1.rating + a2.rating) / 2;
+        const catA = getPadelCategory(avgA);
+        document.getElementById('teamA-avg-badge').textContent = `Avg: ${catA.code} (${avgA.toFixed(2)})`;
+      }
+      if (b1 && b2) {
+        const avgB = (b1.rating + b2.rating) / 2;
+        const catB = getPadelCategory(avgB);
+        document.getElementById('teamB-avg-badge').textContent = `Avg: ${catB.code} (${avgB.toFixed(2)})`;
+      }
+    }
+
+    function addQuickGuest() {
+      const nameInput = document.getElementById('quick-guest-name');
+      const ratingVal = parseFloat(document.getElementById('quick-guest-rating').value) || 2.75;
+      const name = nameInput.value.trim();
+      if (!name) {
+        showToast('Enter the guest player’s name first.', 'error');
+        return;
+      }
+      const guest = {
+        id: 'p_guest_' + Date.now(),
+        name,
+        email: '',
+        gender: 'Male',
+        country: 'United Arab Emirates',
+        city: 'Dubai',
+        side: 'Both Sides',
+        hand: 'Right-Handed',
+        photo: '',
+        rating: ratingVal,
+        wins: 0,
+        losses: 0
+      };
+      state.players.push(guest);
+      nameInput.value = '';
+      saveState();
+      refreshAllViews();
+      showToast(`Added ${name} (${getPadelCategory(ratingVal).code}) to club roster!`);
+    }
+
+    function handleMatchSubmit(event) {
+      event.preventDefault();
+      const a1 = document.getElementById('match-a1').value;
+      const a2 = document.getElementById('match-a2').value;
+      const b1 = document.getElementById('match-b1').value;
+      const b2 = document.getElementById('match-b2').value;
+
+      const uniqueIds = new Set([a1, a2, b1, b2]);
+      if (uniqueIds.size < 4) {
+        showToast('Please select 4 distinct players for the match.', 'error');
+        return;
+      }
+
+      const s1a = parseInt(document.getElementById('set1-a').value || '0', 10);
+      const s1b = parseInt(document.getElementById('set1-b').value || '0', 10);
+      const s2aRaw = document.getElementById('set2-a').value;
+      const s2bRaw = document.getElementById('set2-b').value;
+      const s3aRaw = document.getElementById('set3-a').value;
+      const s3bRaw = document.getElementById('set3-b').value;
+
+      let setsA = 0;
+      let setsB = 0;
+      const parts = [`${s1a}-${s1b}`];
+      if (s1a > s1b) setsA++; else if (s1b > s1a) setsB++;
+
+      if (s2aRaw !== '' && s2bRaw !== '') {
+        const s2a = parseInt(s2aRaw, 10);
+        const s2b = parseInt(s2bRaw, 10);
+        parts.push(`${s2a}-${s2b}`);
+        if (s2a > s2b) setsA++; else if (s2b > s2a) setsB++;
+      }
+      if (s3aRaw !== '' && s3bRaw !== '') {
+        const s3a = parseInt(s3aRaw, 10);
+        const s3b = parseInt(s3bRaw, 10);
+        parts.push(`${s3a}-${s3b}`);
+        if (s3a > s3b) setsA++; else if (s3b > s3a) setsB++;
+      }
+
+      if (setsA === setsB) {
+        showToast('Match cannot end in a tie in sets. Enter a deciding set score.', 'error');
+        return;
+      }
+
+      const winner = setsA > setsB ? 'A' : 'B';
+      const venue = document.getElementById('match-venue').value.trim();
+      const goldenPoint = document.getElementById('match-golden-point').checked;
+
+      // Update ratings with Elo delta
+      applyMatchRatingUpdates([a1, a2], [b1, b2], winner);
+
+      const matchObj = {
+        id: 'm_' + Date.now(),
+        teamA: [a1, a2],
+        teamB: [b1, b2],
+        scoreText: parts.join(', '),
+        winner,
+        venue,
+        goldenPoint,
+        timestamp: Date.now()
+      };
+
+      state.matches.push(matchObj);
+      saveState();
+      syncMatchToCloud(matchObj);
+      showToast(`Match logged (${matchObj.scoreText})! Ratings & categories updated.`);
+      navigate('dashboard');
+    }
+
+    function applyMatchRatingUpdates(teamAIds, teamBIds, winner) {
+      const pA = teamAIds.map(id => state.players.find(p => p.id === id)).filter(Boolean);
+      const pB = teamBIds.map(id => state.players.find(p => p.id === id)).filter(Boolean);
+      if (pA.length < 2 || pB.length < 2) return;
+
+      const avgA = (pA[0].rating + pA[1].rating) / 2;
+      const avgB = (pB[0].rating + pB[1].rating) / 2;
+
+      const expectedA = 1 / (1 + Math.pow(10, (avgB - avgA) / 1.5));
+      const actualA = winner === 'A' ? 1 : 0;
+      const kFactor = 0.16;
+      const deltaA = Number((kFactor * (actualA - expectedA)).toFixed(2));
+      const deltaB = -deltaA;
+
+      pA.forEach(p => {
+        const oldCat = getPadelCategory(p.rating).code;
+        p.rating = Math.max(1.0, Math.min(7.0, Number((p.rating + deltaA).toFixed(2))));
+        if (winner === 'A') p.wins = (p.wins || 0) + 1; else p.losses = (p.losses || 0) + 1;
+        const newCat = getPadelCategory(p.rating).code;
+        if (winner === 'A' && newCat !== oldCat) {
+          showToast(`🎉 Promotion! ${p.name} moved up from ${oldCat} to ${newCat}!`, 'info');
+        }
+        syncPlayerToCloud(p);
+      });
+
+      pB.forEach(p => {
+        const oldCat = getPadelCategory(p.rating).code;
+        p.rating = Math.max(1.0, Math.min(7.0, Number((p.rating + deltaB).toFixed(2))));
+        if (winner === 'B') p.wins = (p.wins || 0) + 1; else p.losses = (p.losses || 0) + 1;
+        const newCat = getPadelCategory(p.rating).code;
+        if (winner === 'B' && newCat !== oldCat) {
+          showToast(`🎉 Promotion! ${p.name} moved up from ${oldCat} to ${newCat}!`, 'info');
+        }
+        syncPlayerToCloud(p);
+      });
+    }
+
+    // =========================================================================
+    // 9. SMART 8-PLAYER SESSION SHUFFLER (HISTORY-AWARE ANTI-REPETITION)
+    // =========================================================================
+    function renderShufflePool() {
+      const container = document.getElementById('shuffle-player-pool');
+      if (!container) return;
+      document.getElementById('shuffle-selected-count').textContent = `${state.selectedShuffleIds.size} / 8 Selected`;
+
+      container.innerHTML = state.players.map(p => {
+        const selected = state.selectedShuffleIds.has(p.id);
+        const cat = getPadelCategory(p.rating);
+        return `
+          <button type="button" onclick="app.toggleShufflePlayer('${p.id}')"
+            class="p-3 rounded-2xl border text-left transition flex items-center gap-2.5 ${
+              selected
+                ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-500/20'
+                : 'border-slate-200 bg-white hover:bg-slate-50'
+            }">
+            ${renderAvatar(p, 'w-8 h-8 text-xs')}
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-extrabold text-slate-900 truncate">${escapeHtml(p.name)}</div>
+              <div class="text-[11px] font-semibold text-slate-500">${cat.code} · ${p.rating.toFixed(2)}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function toggleShufflePlayer(id) {
+      if (state.selectedShuffleIds.has(id)) {
+        state.selectedShuffleIds.delete(id);
+      } else {
+        if (state.selectedShuffleIds.size >= 8) {
+          showToast('Maximum 8 players (2 courts) can be selected.', 'error');
+          return;
+        }
+        state.selectedShuffleIds.add(id);
+      }
+      renderShufflePool();
+    }
+
+    function selectTop8ForShuffle() {
+      state.selectedShuffleIds = new Set(state.players.slice(0, 8).map(p => p.id));
+      renderShufflePool();
+    }
+
+    function clearShuffleSelection() {
+      state.selectedShuffleIds.clear();
+      renderShufflePool();
+      document.getElementById('shuffle-results-area').classList.add('hidden');
+    }
+
+    function resetSessionTossHistory() {
+      state.sessionTossHistory = [];
+      showToast('Current session toss history cleared.');
+    }
+
+    function pairKey(id1, id2) {
+      return [id1, id2].sort().join('::');
+    }
+
+    function buildPairRepetitionMap() {
+      const partnerCounts = {};
+      // Weight historical club matches lightly (1pt)
+      state.matches.forEach(m => {
+        if (m.teamA?.length === 2) {
+          const kA = pairKey(m.teamA[0], m.teamA[1]);
+          partnerCounts[kA] = (partnerCounts[kA] || 0) + 1;
+        }
+        if (m.teamB?.length === 2) {
+          const kB = pairKey(m.teamB[0], m.teamB[1]);
+          partnerCounts[kB] = (partnerCounts[kB] || 0) + 1;
+        }
+      });
+      // Weight current session tosses heavily (5pts, and +10pts for immediate last round)
+      state.sessionTossHistory.forEach((roundPairs, idx) => {
+        const recencyBonus = idx === state.sessionTossHistory.length - 1 ? 10 : 5;
+        roundPairs.forEach(k => {
+          partnerCounts[k] = (partnerCounts[k] || 0) + recencyBonus;
+        });
+      });
+      return partnerCounts;
+    }
+
+    function generateSmartShuffle() {
+      const ids = Array.from(state.selectedShuffleIds);
+      if (ids.length !== 4 && ids.length !== 8) {
+        showToast('Please select either 4 players (1 court) or 8 players (2 courts).', 'error');
+        return;
+      }
+
+      const mode = document.getElementById('shuffle-mode').value;
+      const partnerPenaltyMap = buildPairRepetitionMap();
+      const getRating = (id) => state.players.find(p => p.id === id)?.rating || 2.5;
+
+      const varietyWeight = mode === 'variety' ? 12 : mode === 'balance' ? 1.5 : 6;
+      const balanceWeight = mode === 'balance' ? 12 : mode === 'variety' ? 1.5 : 6;
+
+      let bestCourts = null;
+      let bestCost = Infinity;
+
+      if (ids.length === 4) {
+        // 3 unique partitions of 4 players
+        const partitions = [
+          [[ids[0], ids[1]], [ids[2], ids[3]]],
+          [[ids[0], ids[2]], [ids[1], ids[3]]],
+          [[ids[0], ids[3]], [ids[1], ids[2]]]
+        ];
+        partitions.forEach(([tA, tB]) => {
+          const rep = (partnerPenaltyMap[pairKey(tA[0], tA[1])] || 0) + (partnerPenaltyMap[pairKey(tB[0], tB[1])] || 0);
+          const diff = Math.abs((getRating(tA[0]) + getRating(tA[1])) - (getRating(tB[0]) + getRating(tB[1])));
+          const jitter = Math.random() * 0.15;
+          const cost = rep * varietyWeight + diff * balanceWeight + jitter;
+          if (cost < bestCost) {
+            bestCost = cost;
+            bestCourts = [{ teamA: tA, teamB: tB }];
+          }
+        });
+      } else {
+        // 8 players -> evaluate randomized & exhaustive splits into 2 balanced courts
+        const allSplits = [];
+        function generateSplits(remaining, currentPairs) {
+          if (remaining.length === 0) {
+            // Pair up the 4 teams into 2 matches
+            allSplits.push([
+              { teamA: currentPairs[0], teamB: currentPairs[1] },
+              { teamA: currentPairs[2], teamB: currentPairs[3] }
+            ]);
+            return;
+          }
+          const first = remaining[0];
+          for (let i = 1; i < remaining.length; i++) {
+            const partner = remaining[i];
+            const nextRem = remaining.filter((_, idx) => idx !== 0 && idx !== i);
+            generateSplits(nextRem, [...currentPairs, [first, partner]]);
+          }
+        }
+        generateSplits(ids, []);
+
+        allSplits.forEach(courts => {
+          let repCost = 0;
+          let diffCost = 0;
+          courts.forEach(c => {
+            repCost += (partnerPenaltyMap[pairKey(c.teamA[0], c.teamA[1])] || 0);
+            repCost += (partnerPenaltyMap[pairKey(c.teamB[0], c.teamB[1])] || 0);
+            const sumA = getRating(c.teamA[0]) + getRating(c.teamA[1]);
+            const sumB = getRating(c.teamB[0]) + getRating(c.teamB[1]);
+            diffCost += Math.abs(sumA - sumB);
+          });
+          const jitter = Math.random() * 0.25;
+          const totalCost = repCost * varietyWeight + diffCost * balanceWeight + jitter;
+          if (totalCost < bestCost) {
+            bestCost = totalCost;
+            bestCourts = courts;
+          }
+        });
+      }
+
+      if (!bestCourts) return;
+
+      // Record pairs in session toss history
+      const usedPairs = [];
+      bestCourts.forEach(c => {
+        usedPairs.push(pairKey(c.teamA[0], c.teamA[1]));
+        usedPairs.push(pairKey(c.teamB[0], c.teamB[1]));
+      });
+      state.sessionTossHistory.push(usedPairs);
+
+      renderGeneratedCourts(bestCourts);
+    }
+
+    function renderGeneratedCourts(courts) {
+      const area = document.getElementById('shuffle-results-area');
+      const grid = document.getElementById('shuffle-courts-grid');
+      area.classList.remove('hidden');
+      document.getElementById('shuffle-round-badge').textContent = `Session Toss #${state.sessionTossHistory.length}`;
+
+      grid.innerHTML = courts.map((c, idx) => {
+        const pA1 = state.players.find(p => p.id === c.teamA[0]);
+        const pA2 = state.players.find(p => p.id === c.teamA[1]);
+        const pB1 = state.players.find(p => p.id === c.teamB[0]);
+        const pB2 = state.players.find(p => p.id === c.teamB[1]);
+        const avgA = ((pA1.rating + pA2.rating) / 2).toFixed(2);
+        const avgB = ((pB1.rating + pB2.rating) / 2).toFixed(2);
+
+        return `
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-sm text-slate-900">🎾 Court ${idx + 1}</span>
+              <button type="button" onclick="app.prefillMatchFromCourt('${c.teamA[0]}','${c.teamA[1]}','${c.teamB[0]}','${c.teamB[1]}')"
+                class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+                Log Score →
+              </button>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-emerald-200">
+              <div class="flex items-center justify-between text-[11px] font-bold text-emerald-700 uppercase mb-1">
+                <span>Pair A</span>
+                <span>Avg ${avgA} (${getPadelCategory(avgA).code})</span>
+              </div>
+              <div class="text-sm font-extrabold text-slate-900">
+                ${escapeHtml(pA1.name)} (${getPadelCategory(pA1.rating).code}) &amp; ${escapeHtml(pA2.name)} (${getPadelCategory(pA2.rating).code})
+              </div>
+            </div>
+
+            <div class="text-center text-xs font-extrabold text-slate-400">VS</div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-sky-200">
+              <div class="flex items-center justify-between text-[11px] font-bold text-sky-700 uppercase mb-1">
+                <span>Pair B</span>
+                <span>Avg ${avgB} (${getPadelCategory(avgB).code})</span>
+              </div>
+              <div class="text-sm font-extrabold text-slate-900">
+                ${escapeHtml(pB1.name)} (${getPadelCategory(pB1.rating).code}) &amp; ${escapeHtml(pB2.name)} (${getPadelCategory(pB2.rating).code})
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function prefillMatchFromCourt(a1, a2, b1, b2) {
+      navigate('match');
+      document.getElementById('match-a1').value = a1;
+      document.getElementById('match-a2').value = a2;
+      document.getElementById('match-b1').value = b1;
+      document.getElementById('match-b2').value = b2;
+      updateMatchTeamBadges();
+      showToast('Court lineup loaded into Match Score Logger!');
+    }
+
+    // =========================================================================
+    // 10. AMERICANO TOURNAMENT MODE (4, 8, OR 12 PLAYERS)
+    // =========================================================================
+    function renderAmericanoView() {
+      const setupCard = document.getElementById('americano-setup-card');
+      const activeBoard = document.getElementById('americano-active-board');
+
+      if (state.activeAmericano) {
+        setupCard.classList.add('hidden');
+        activeBoard.classList.remove('hidden');
+        renderActiveAmericanoBoard();
+        return;
+      }
+
+      setupCard.classList.remove('hidden');
+      activeBoard.classList.add('hidden');
+      updateAmericanoSelectionCount();
+
+      const pool = document.getElementById('americano-player-pool');
+      if (!pool) return;
+      pool.innerHTML = state.players.map(p => {
+        const selected = state.selectedAmericanoIds.has(p.id);
+        const cat = getPadelCategory(p.rating);
+        return `
+          <button type="button" onclick="app.toggleAmericanoPlayer('${p.id}')"
+            class="p-3 rounded-2xl border text-left transition flex items-center gap-2.5 ${
+              selected
+                ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-400/30'
+                : 'border-slate-200 bg-white hover:bg-slate-50'
+            }">
+            ${renderAvatar(p, 'w-8 h-8 text-xs')}
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-extrabold text-slate-900 truncate">${escapeHtml(p.name)}</div>
+              <div class="text-[11px] font-semibold text-slate-500">${cat.code}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function updateAmericanoSelectionCount() {
+      const target = parseInt(document.getElementById('americano-size')?.value || '8', 10);
+      const badge = document.getElementById('americano-selected-badge');
+      if (badge) {
+        badge.textContent = `${state.selectedAmericanoIds.size} / ${target} Selected`;
+      }
+    }
+
+    function toggleAmericanoPlayer(id) {
+      const target = parseInt(document.getElementById('americano-size').value, 10);
+      if (state.selectedAmericanoIds.has(id)) {
+        state.selectedAmericanoIds.delete(id);
+      } else {
+        if (state.selectedAmericanoIds.size >= target) {
+          showToast(`Maximum ${target} players for this Americano format.`, 'error');
+          return;
+        }
+        state.selectedAmericanoIds.add(id);
+      }
+      renderAmericanoView();
+    }
+
+    function buildAmericanoSchedule(playerIds) {
+      // Circle round-robin schedule so every player partners with every other player once
+      const n = playerIds.length;
+      const arr = [...playerIds];
+      const rounds = [];
+
+      for (let r = 0; r < n - 1; r++) {
+        const pairs = [];
+        for (let i = 0; i < n / 2; i++) {
+          pairs.push([arr[i], arr[n - 1 - i]]);
+        }
+        const courts = [];
+        for (let c = 0; c < pairs.length; c += 2) {
+          courts.push({
+            courtNum: c / 2 + 1,
+            teamA: pairs[c],
+            teamB: pairs[c + 1],
+            scoreA: null,
+            scoreB: null
+          });
+        }
+        rounds.push({ roundNum: r + 1, courts });
+
+        // Rotate all except index 0
+        const fixed = arr[0];
+        const rest = arr.slice(1);
+        rest.unshift(rest.pop());
+        arr.splice(0, arr.length, fixed, ...rest);
+      }
+      return rounds;
+    }
+
+    function startAmericanoTournament() {
+      const targetSize = parseInt(document.getElementById('americano-size').value, 10);
+      const ids = Array.from(state.selectedAmericanoIds);
+      if (ids.length !== targetSize) {
+        showToast(`Please select exactly ${targetSize} players to start.`, 'error');
+        return;
+      }
+
+      const title = document.getElementById('americano-title').value.trim() || 'Club Americano';
+      const pointsPerRound = parseInt(document.getElementById('americano-points').value, 10);
+
+      state.activeAmericano = {
+        title,
+        pointsPerRound,
+        playerIds: ids,
+        rounds: buildAmericanoSchedule(ids),
+        createdAt: Date.now()
+      };
+      saveState();
+      renderAmericanoView();
+      showToast(`${title} started!`);
+    }
+
+    function updateAmericanoScore(roundIdx, courtIdx, side, valStr) {
+      const tourney = state.activeAmericano;
+      if (!tourney) return;
+      const court = tourney.rounds[roundIdx]?.courts[courtIdx];
+      if (!court) return;
+
+      if (valStr === '') {
+        court.scoreA = null;
+        court.scoreB = null;
+      } else {
+        const maxPts = tourney.pointsPerRound;
+        const clamped = Math.max(0, Math.min(maxPts, parseInt(valStr, 10) || 0));
+        if (side === 'A') {
+          court.scoreA = clamped;
+          court.scoreB = maxPts - clamped;
+        } else {
+          court.scoreB = clamped;
+          court.scoreA = maxPts - clamped;
+        }
+      }
+      saveState();
+      renderActiveAmericanoBoard();
+    }
+
+    function renderActiveAmericanoBoard() {
+      const tourney = state.activeAmericano;
+      if (!tourney) return;
+
+      document.getElementById('americano-live-title').textContent = tourney.title;
+      document.getElementById('americano-live-meta').textContent =
+        `${tourney.pointsPerRound} Points per round · ${tourney.playerIds.length} Players · ${tourney.rounds.length} Rounds`;
+
+      // Calculate standings
+      const stats = {};
+      tourney.playerIds.forEach(id => {
+        stats[id] = { id, points: 0, diff: 0, wins: 0, played: 0 };
+      });
+
+      tourney.rounds.forEach(r => {
+        r.courts.forEach(c => {
+          if (c.scoreA !== null && c.scoreB !== null) {
+            c.teamA.forEach(id => {
+              stats[id].points += c.scoreA;
+              stats[id].diff += (c.scoreA - c.scoreB);
+              stats[id].played++;
+              if (c.scoreA > c.scoreB) stats[id].wins++;
+            });
+            c.teamB.forEach(id => {
+              stats[id].points += c.scoreB;
+              stats[id].diff += (c.scoreB - c.scoreA);
+              stats[id].played++;
+              if (c.scoreB > c.scoreA) stats[id].wins++;
+            });
+          }
+        });
+      });
+
+      const standings = Object.values(stats).sort((a, b) => b.points - a.points || b.diff - a.diff);
+      document.getElementById('americano-standings-list').innerHTML = standings.map((s, idx) => `
+        <div class="flex items-center justify-between p-2.5 rounded-2xl ${idx === 0 ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-5 text-xs font-extrabold ${idx === 0 ? 'text-amber-600' : 'text-slate-400'}">#${idx + 1}</span>
+            <span class="text-xs font-bold text-slate-900 truncate">${escapeHtml(getPlayerName(s.id))}</span>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="text-sm font-extrabold text-emerald-700">${s.points} pts</span>
+            <span class="text-[11px] text-slate-500 ml-1">(${s.diff >= 0 ? '+' : ''}${s.diff})</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Render rounds
+      document.getElementById('americano-rounds-container').innerHTML = tourney.rounds.map((r, rIdx) => `
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-sm text-slate-900">Round ${r.roundNum}</span>
+            <span class="text-xs text-slate-500">Target: ${tourney.pointsPerRound} total pts</span>
+          </div>
+          <div class="space-y-2.5">
+            ${r.courts.map((c, cIdx) => `
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex-1 text-xs sm:text-sm font-bold text-slate-800">
+                  <span class="text-[11px] uppercase text-emerald-700 block">Court ${c.courtNum} · Pair A</span>
+                  ${escapeHtml(getPlayerName(c.teamA[0]))} &amp; ${escapeHtml(getPlayerName(c.teamA[1]))}
+                </div>
+
+                <div class="flex items-center gap-2 self-center">
+                  <input type="number" min="0" max="${tourney.pointsPerRound}"
+                    value="${c.scoreA !== null ? c.scoreA : ''}"
+                    onchange="app.updateAmericanoScore(${rIdx}, ${cIdx}, 'A', this.value)"
+                    placeholder="0"
+                    class="w-14 py-2 text-center font-extrabold rounded-xl border border-slate-300 bg-white text-sm" />
+                  <span class="text-xs font-extrabold text-slate-400">:</span>
+                  <input type="number" min="0" max="${tourney.pointsPerRound}"
+                    value="${c.scoreB !== null ? c.scoreB : ''}"
+                    onchange="app.updateAmericanoScore(${rIdx}, ${cIdx}, 'B', this.value)"
+                    placeholder="0"
+                    class="w-14 py-2 text-center font-extrabold rounded-xl border border-slate-300 bg-white text-sm" />
+                </div>
+
+                <div class="flex-1 text-xs sm:text-sm font-bold text-slate-800 sm:text-right">
+                  <span class="text-[11px] uppercase text-sky-700 block">Pair B</span>
+                  ${escapeHtml(getPlayerName(c.teamB[0]))} &amp; ${escapeHtml(getPlayerName(c.teamB[1]))}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function finishAndSyncAmericano() {
+      const tourney = state.activeAmericano;
+      if (!tourney) return;
+
+      let syncedCount = 0;
+      tourney.rounds.forEach(r => {
+        r.courts.forEach(c => {
+          if (c.scoreA !== null && c.scoreB !== null && c.scoreA !== c.scoreB) {
+            const winner = c.scoreA > c.scoreB ? 'A' : 'B';
+            applyMatchRatingUpdates(c.teamA, c.teamB, winner);
+            const matchObj = {
+              id: 'm_amer_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+              teamA: c.teamA,
+              teamB: c.teamB,
+              scoreText: `${c.scoreA}-${c.scoreB} (Americano)`,
+              winner,
+              venue: tourney.title,
+              goldenPoint: true,
+              timestamp: Date.now()
+            };
+            state.matches.push(matchObj);
+            syncMatchToCloud(matchObj);
+            syncedCount++;
+          }
+        });
+      });
+
+      state.activeAmericano = null;
+      state.selectedAmericanoIds.clear();
+      saveState();
+      showToast(`Americano finished! ${syncedCount} games synced to player stats & ratings.`);
+      navigate('leaderboard');
+    }
+
+    function discardAmericano() {
+      state.activeAmericano = null;
+      saveState();
+      renderAmericanoView();
+    }
+
+    // =========================================================================
+    // 11. LEADERBOARD & PLAYER PROFILE
+    // =========================================================================
+    function setLeaderboardFilter(filter) {
+      state.leaderboardFilter = filter;
+      document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.className = 'lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white';
+        } else {
+          btn.className = 'lb-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700';
+        }
+      });
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const body = document.getElementById('leaderboard-table-body');
+      if (!body) return;
+
+      let list = [...state.players].sort((a, b) => b.rating - a.rating);
+      if (state.leaderboardFilter === 'D') {
+        list = list.filter(p => getPadelCategory(p.rating).code.startsWith('D'));
+      } else if (state.leaderboardFilter === 'C') {
+        list = list.filter(p => getPadelCategory(p.rating).code.startsWith('C'));
+      } else if (state.leaderboardFilter === 'BA') {
+        list = list.filter(p => ['B-', 'B', 'B+', 'A'].includes(getPadelCategory(p.rating).code));
+      }
+
+      if (!list.length) {
+        body.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">No players in this category tier yet.</p>`;
+        return;
+      }
+
+      body.innerHTML = list.map((p, idx) => {
+        const cat = getPadelCategory(p.rating);
+        const total = (p.wins || 0) + (p.losses || 0);
+        const wr = total > 0 ? Math.round((p.wins / total) * 100) : 0;
+        const isMe = p.id === state.currentPlayerId;
+        return `
+          <div class="p-4 rounded-2xl border ${isMe ? 'border-emerald-400 bg-emerald-50/40' : 'border-slate-200 bg-white'} flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-7 text-sm font-extrabold ${idx < 3 ? 'text-amber-500' : 'text-slate-400'}">#${idx + 1}</span>
+              ${renderAvatar(p, 'w-11 h-11 text-sm')}
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-extrabold text-sm text-slate-900 truncate">${escapeHtml(p.name)}</span>
+                  ${isMe ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">YOU</span>' : ''}
+                </div>
+                <div class="text-xs text-slate-500 truncate">
+                  ${escapeHtml(p.city || 'Dubai')}, ${escapeHtml(p.country || 'UAE')} · ${escapeHtml(p.side || 'Both Sides')}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 shrink-0">
+              <div class="hidden sm:block text-right">
+                <div class="text-xs font-bold text-slate-800">${p.wins || 0}W - ${p.losses || 0}L</div>
+                <div class="text-[11px] text-slate-400">${wr}% Win Rate</div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-3 py-1 rounded-xl border text-xs font-extrabold ${cat.color}">
+                  ${cat.code}
+                </span>
+                <div class="text-xs font-bold text-slate-600 mt-0.5">${p.rating.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProfileView() {
+      const container = document.getElementById('profile-card-container');
+      if (!container) return;
+
+      const me = state.players.find(p => p.id === state.currentPlayerId);
+      if (!me) {
+        container.innerHTML = `
+          <div class="p-8 text-center space-y-4">
+            <h2 class="text-xl font-extrabold text-slate-900">No Active Player Profile</h2>
+            <p class="text-sm text-slate-500">Create your player card or sign in with your verified email to view your stats.</p>
+            <button onclick="app.navigate('auth')" class="px-6 py-3 rounded-2xl bg-emerald-600 text-white font-bold text-sm">
+              Go to Sign Up / Sign In →
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const cat = getPadelCategory(me.rating);
+      const myMatches = state.matches.filter(m => m.teamA.includes(me.id) || m.teamB.includes(me.id));
+
+      container.innerHTML = `
+        <div class="court-gradient px-6 py-8 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div class="relative">
+              ${renderAvatar(me, 'w-20 h-20 text-2xl')}
+              <label class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white text-slate-900 shadow flex items-center justify-center text-xs cursor-pointer hover:scale-105 transition" title="Change Photo">
+                📷
+                <input type="file" accept="image/*" onchange="app.handlePhotoUpload(event, 'profile')" class="hidden" />
+              </label>
+            </div>
+            <div>
+              <span class="inline-block px-2.5 py-0.5 rounded-full bg-white/15 text-xs font-bold mb-1">
+                ${escapeHtml(me.gender || '')} · ${escapeHtml(me.city || '')}, ${escapeHtml(me.country || '')}
+              </span>
+              <h2 class="text-2xl font-extrabold">${escapeHtml(me.name)}</h2>
+              <p class="text-xs text-emerald-100 mt-0.5">${escapeHtml(me.email || '')} · ${escapeHtml(me.side)} · ${escapeHtml(me.hand)}</p>
+            </div>
+          </div>
+
+          <div class="bg-white/15 backdrop-blur px-5 py-3.5 rounded-2xl text-center">
+            <div class="text-xs uppercase font-bold text-emerald-100">Official Level</div>
+            <div class="text-3xl font-extrabold mt-0.5">${cat.code}</div>
+            <div class="text-xs font-semibold text-amber-300">${me.rating.toFixed(2)} · ${cat.label}</div>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <div class="flex flex-wrap gap-3 justify-between items-center border-b border-slate-200 pb-4">
+            <div class="text-sm font-bold text-slate-700">
+              Career Record: <span class="text-emerald-700">${me.wins || 0} Wins</span> · <span class="text-rose-600">${me.losses || 0} Losses</span>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="app.startQuizFlow()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition">
+                ↺ Retake Level Quiz
+              </button>
+              <button onclick="app.signOutProfile()" class="px-4 py-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition">
+                Sign Out
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 mb-3">Your Match History (${myMatches.length})</h3>
+            ${myMatches.length === 0
+              ? `<p class="text-sm text-slate-500">You haven't logged any matches yet.</p>`
+              : `<div class="space-y-2.5">${myMatches.map(m => {
+                  const inA = m.teamA.includes(me.id);
+                  const won = (inA && m.winner === 'A') || (!inA && m.winner === 'B');
+                  return `
+                    <div class="p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                      <div class="text-xs sm:text-sm">
+                        <span class="font-extrabold ${won ? 'text-emerald-700' : 'text-rose-600'}">${won ? 'WIN' : 'LOSS'}</span>
+                        <span class="text-slate-700 ml-2">${m.teamA.map(getPlayerName).join(' & ')} vs ${m.teamB.map(getPlayerName).join(' & ')}</span>
+                      </div>
+                      <span class="font-mono font-extrabold text-xs px-2.5 py-1 rounded-lg bg-slate-100">${escapeHtml(m.scoreText)}</span>
+                    </div>
+                  `;
+                }).join('')}</div>`
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function signOutProfile() {
+      state.currentPlayerId = null;
+      saveState();
+      showToast('Signed out of player profile.');
+      navigate('auth');
+    }
+
+    // =========================================================================
+    // 12. OPTIONAL FIREBASE CLOUD SYNC (SAFE FALLBACK IF UNAVAILABLE)
+    // =========================================================================
+    async function syncPlayerToCloud(player) {
+      if (!state.db || !state.authUser) return;
+      try {
+        await setDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'padeloq_players', player.id), player, { merge: true });
+      } catch (e) {
+        // Silently rely on local storage if Firestore rules restrict public writes
+      }
+    }
+
+    async function syncMatchToCloud(matchObj) {
+      if (!state.db || !state.authUser) return;
+      try {
+        await setDoc(doc(state.db, 'artifacts', state.appId, 'public', 'data', 'padeloq_matches', matchObj.id), matchObj, { merge: true });
+      } catch (e) {
+        // Silently rely on local storage
+      }
+    }
+
+    async function initCloudSync() {
+      try {
+        if (typeof __firebase_config === 'undefined') return;
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const fbApp = initializeApp(firebaseConfig);
+        const auth = getAuth(fbApp);
+        state.db = getFirestore(fbApp);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+          state.authUser = user;
+          if (!user) return;
+          try {
+            onSnapshot(
+              collection(state.db, 'artifacts', state.appId, 'public', 'data', 'padeloq_players'),
+              (snap) => {
+                snap.forEach((docSnap) => {
+                  const data = docSnap.data();
+                  if (data && data.id && !state.players.some(p => p.id === data.id)) {
+                    state.players.push(data);
+                  }
+                });
+                saveState();
+                refreshAllViews();
+              },
+              () => {}
+            );
+          } catch (err) {}
+        });
+      } catch (err) {
+        console.warn('Running in standalone local mode:', err);
+      }
+    }
+
+    // =========================================================================
+    // 13. EXPOSE GLOBAL CONTROLLER & BOOTSTRAP
+    // =========================================================================
+    window.app = {
+      navigate,
+      switchAuthTab,
+      handleCountryChange,
+      handlePhotoUpload,
+      handleExistingEmailSignIn,
+      handleRegisterStep1,
+      saveEmailJsConfig,
+      autoFillOtp,
+      backToSignupForm,
+      handleVerifyOtp,
+      startQuizFlow,
+      selectQuizOption,
+      retakeQuizQuestions,
+      confirmQuizProfile,
+      updateMatchTeamBadges,
+      addQuickGuest,
+      handleMatchSubmit,
+      toggleShufflePlayer,
+      selectTop8ForShuffle,
+      clearShuffleSelection,
+      resetSessionTossHistory,
+      generateSmartShuffle,
+      prefillMatchFromCourt,
+      updateAmericanoSelectionCount,
+      toggleAmericanoPlayer,
+      startAmericanoTournament,
+      updateAmericanoScore,
+      finishAndSyncAmericano,
+      discardAmericano,
+      setLeaderboardFilter,
+      signOutProfile
+    };
+
+    // Immediate startup
+    loadState();
+    navigate('dashboard');
+    initCloudSync();
+  </script>
+</body>
+</html>
